@@ -9,7 +9,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use('/api/v1', playerDataAPI);
 
-app.listen(3000);
+app.listen(4200);
 
 //eslint-disable-next-line
-console.log('express api started on port: 3000...');
+console.log('express api started on port: 4200...');
