@@ -39,7 +39,7 @@ async function calculateHistoricalJakes(season = 2020) {
     
     console.log('starting season: ' + s.toString());
       
-    var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/${s}/0`);
+    var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/0`);
     var tempPlayersJSON = await tempPlayersResp.json();
     var tempPlayers = tempPlayersJSON.jakes;
     
@@ -82,7 +82,7 @@ async function calculateHistoricalJakes(season = 2020) {
     
     for(var player_id in players) {
       var historicalPlayer = players[player_id];
-      var update_pff_idr = await fetch(`http://lvh.me:3000/api/v1/update/jake_history/`, {
+      var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/jake_history/`, {
         method: 'post',              
         headers: {
           'Accept': 'application/json',
@@ -118,7 +118,7 @@ async function calculateUltimate(player_stats, birthdate) {
 
   // Idea is that a perfect jake is 1075 + 10000 = 11075 (jan 10, 1975 - delhomme's bday!)
   // Gotta get some historical shit. 
-  var histResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_history/${player_stats.player_id}`);
+  var histResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_history/${player_stats.player_id}`);
   var histRespJSON = await histResp.json();
   var history = histRespJSON.history;
 
@@ -202,7 +202,7 @@ async function calculateYahooUltimate(player_stats, player, season, player_id) {
   // Idea is that a perfect jake is 1075 + 10000 = 11075 (jan 10, 1975 - delhomme's bday!)
   // Gotta get some historical shit. 
   var search_name = player.split(' ')[0] + ' ' + player.split(' ')[1];
-  var histResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_history_name/`, {
+  var histResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_history_name/`, {
     method: 'post',              
     headers: {
       'Accept': 'application/json',
@@ -280,7 +280,7 @@ async function calcUlts() {
   try {
     for(var s=2008;s<=2020;s++) {
       console.log(`starting season #${s}.`);
-      var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/${s}/0`);
+      var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/0`);
       var tempPlayersJSON = await tempPlayersResp.json();
       var tempPlayers = tempPlayersJSON.jakes;
       
@@ -293,7 +293,7 @@ async function calcUlts() {
         var player = tempPlayers[tp];
         var ultimate = await calculateUltimate(player, player.birthday);
         if(ultimate) {
-          var pff_player_insert_r = await fetch(`http://lvh.me:3000/api/v1/update/pff/ultimate/`, {
+          var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/update/pff/ultimate/`, {
             method: 'post',              
             headers: {
               'Accept': 'application/json',
@@ -439,14 +439,14 @@ async function parseESPNGames(espnData, season, week) {
       if(away_team.abbreviation === 'ARI') away_team.abbreviation = 'ARZ';
       if(home_team.abbreviation === 'ARI') home_team.abbreviation = 'ARZ';
 
-      var teamIdAR = await fetch(`http://lvh.me:3000/api/v1/get/pff/team/${away_team.abbreviation}/${season}`);
+      var teamIdAR = await fetch(`http://xperimental.io:4200/api/v1/get/pff/team/${away_team.abbreviation}/${season}`);
       var teamIdAJ = await teamIdAR.json();       
       
       if(!teamIdAJ.team[0]) console.log(away_team);
 
       var awayteamId = teamIdAJ.team[0].franchise_id;
 
-      var teamIdHR = await fetch(`http://lvh.me:3000/api/v1/get/pff/team/${home_team.abbreviation}/${season}`);
+      var teamIdHR = await fetch(`http://xperimental.io:4200/api/v1/get/pff/team/${home_team.abbreviation}/${season}`);
       var teamIdHJ = await teamIdHR.json();
 
       if(!teamIdHJ.team[0]) console.log(home_team);
@@ -495,14 +495,14 @@ async function parseYahooPassers(yahooData, season, week) {
 
     var teamId = 0;
     if(season >= 2020) {
-      var teamIdR = await fetch(`http://lvh.me:3000/api/v1/get/pff/team/${player.team.abbreviation}/${season}`);
+      var teamIdR = await fetch(`http://xperimental.io:4200/api/v1/get/pff/team/${player.team.abbreviation}/${season}`);
       var teamIdJ = await teamIdR.json();
       teamId = teamIdJ.team[0].franchise_id;
     }
 
     // Check the Db for player info, based on season and week. 
     var search_name = player.displayName.split(' ')[0] + ' ' + player.displayName.split(' ')[1];
-    var player_name_resp = await fetch(`http://lvh.me:3000/api/v1/get/player/name/`, {
+    var player_name_resp = await fetch(`http://xperimental.io:4200/api/v1/get/player/name/`, {
       method: 'post',              
       headers: {
         'Accept': 'application/json',
@@ -566,7 +566,7 @@ async function setJakePositions(season = 2020, weeks = 21) {
     for(var w=1;w<=weeks;w++) {
       console.log('starting week: ' + w.toString());
 
-      var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/${s}/${w}`);
+      var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/${w}`);
       var tempPlayersJSON = await tempPlayersResp.json();
       var tempPlayers = tempPlayersJSON.jakes;
       var records = 0;
@@ -589,7 +589,7 @@ async function setJakePositions(season = 2020, weeks = 21) {
           jake_position: pos
         };
 
-        var update_pff_idr = await fetch(`http://lvh.me:3000/api/v1/update/pff/jake_pos/`, {
+        var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/pff/jake_pos/`, {
           method: 'post',              
           headers: {
             'Accept': 'application/json',
@@ -634,7 +634,7 @@ async function updateCurrentWeek(season, week = 0) {
       var espn_current_stats = await espn_current_stats_r.json();
       var espn_parsed_games = await parseESPNGames(espn_current_stats, season, week);
 
-      var l_games_resp = await fetch(`http://lvh.me:3000/api/v1/get/pff/games/${season}/${week}`);
+      var l_games_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/games/${season}/${week}`);
       var l_games_json = await l_games_resp.json();
       var l_games = l_games_json.games;
 
@@ -658,9 +658,9 @@ async function updateCurrentWeek(season, week = 0) {
         var url = '';
         if(local_game) {
           insertGame.id = local_game.id;
-          url = `http://lvh.me:3000/api/v1/update/pff/game/score`;
+          url = `http://xperimental.io:4200/api/v1/update/pff/game/score`;
         } else {
-          url = `http://lvh.me:3000/api/v1/add/pff/game`;
+          url = `http://xperimental.io:4200/api/v1/add/pff/game`;
         }
         
         var updated_game_resp = await fetch(url, {
@@ -679,11 +679,11 @@ async function updateCurrentWeek(season, week = 0) {
     // Then we have data and need to update instead of insert.
     
 
-    var l_games_resp = await fetch(`http://lvh.me:3000/api/v1/get/pff/games/${season}/${week}`);
+    var l_games_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/games/${season}/${week}`);
     var l_games_json = await l_games_resp.json();
     var l_games = l_games_json.games;
 
-    var l_players_resp = await fetch(`http://lvh.me:3000/api/v1/get/pff/players/${season}/${week}`);
+    var l_players_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/players/${season}/${week}`);
     var l_players_json = await l_players_resp.json();      
     var l_players = l_players_json.qbs;
     
@@ -708,9 +708,9 @@ async function updateCurrentWeek(season, week = 0) {
 
       if(local_player) {
         yahoo_player_pass.id = local_player.id;
-        url = `http://lvh.me:3000/api/v1/update/pff/week/`;
+        url = `http://xperimental.io:4200/api/v1/update/pff/week/`;
       } else {
-        url = `http://lvh.me:3000/api/v1/add/pff/week`;
+        url = `http://xperimental.io:4200/api/v1/add/pff/week`;
       }
 
 

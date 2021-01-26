@@ -44,7 +44,7 @@ class NFLAPI {
 
   async calcDefStats() {
     try {
-      var teamsResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/def/`);
+      var teamsResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/def/`);
       var teamsRespJSON = await teamsResp.json();
       var history_teams = teamsRespJSON.history;
 
@@ -83,7 +83,7 @@ class NFLAPI {
           if(s===2020 && w > 3) continue;
           console.log(`Season ${s} - Week ${w} is starting....`);          
 
-          var l_players_resp = await fetch(`http://lvh.me:3000/api/v1/get/pff/players/${s}/${w}`);
+          var l_players_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/players/${s}/${w}`);
           var l_players_json = await l_players_resp.json();      
           var l_players = l_players_json.qbs;
     
@@ -94,7 +94,7 @@ class NFLAPI {
           for(var pfp=0;pfp<yahoo_players.length;pfp++) {
             var yahoo_player_pass = yahoo_players[pfp].player;
             var search_name = yahoo_player_pass.displayName.split(' ')[0] + ' ' + yahoo_player_pass.displayName.split(' ')[1];
-            var player_name_resp = await fetch(`http://lvh.me:3000/api/v1/get/player/name/`, {
+            var player_name_resp = await fetch(`http://xperimental.io:4200/api/v1/get/player/name/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -124,7 +124,7 @@ class NFLAPI {
             }
 
             var teamId = 0;
-            var teamIdR = await fetch(`http://lvh.me:3000/api/v1/get/pff/team/${local_player.team}/${s}`);
+            var teamIdR = await fetch(`http://xperimental.io:4200/api/v1/get/pff/team/${local_player.team}/${s}`);
             var teamIdJ = await teamIdR.json();
 
             if(!teamIdJ.team[0]) {
@@ -159,7 +159,7 @@ class NFLAPI {
               ultimate_score: 0.00
             };
       
-            var updated_resp = await fetch(`http://lvh.me:3000/api/v1/update/pff/week/`, {
+            var updated_resp = await fetch(`http://xperimental.io:4200/api/v1/update/pff/week/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -191,7 +191,7 @@ class NFLAPI {
         for(var w=1;w<=21;w++) {
           console.log('starting week: ' + w.toString());
           if(s === 2020 && w > 3) continue;
-          var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/${s}/${w}`);
+          var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/${w}`);
           var tempPlayersJSON = await tempPlayersResp.json();
           var tempPlayers = tempPlayersJSON.jakes;
           var records = 0;
@@ -218,7 +218,7 @@ class NFLAPI {
               jake_position: pos
             };
 
-            var update_pff_idr = await fetch(`http://lvh.me:3000/api/v1/update/pff/jake_pos/`, {
+            var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/pff/jake_pos/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -252,7 +252,7 @@ class NFLAPI {
       for(var s=2008;s<=2020;s++) {
         console.log('starting season: ' + s.toString());
         
-        var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/${s}/0`);
+        var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/0`);
         var tempPlayersJSON = await tempPlayersResp.json();
         var tempPlayers = tempPlayersJSON.jakes;
         
@@ -298,7 +298,7 @@ class NFLAPI {
 
       for(var player_id in players) {
         var historicalPlayer = players[player_id];
-        var update_pff_idr = await fetch(`http://lvh.me:3000/api/v1/update/jake_history/`, {
+        var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/jake_history/`, {
           method: 'post',              
           headers: {
             'Accept': 'application/json',
@@ -334,7 +334,7 @@ class NFLAPI {
 
     // Idea is that a perfect jake is 1075 + 10000 = 11075 (jan 10, 1975 - delhomme's bday!)
     // Gotta get some historical shit. 
-    var histResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_history/${player_stats.player_id}`);
+    var histResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_history/${player_stats.player_id}`);
     var histRespJSON = await histResp.json();
     var history = histRespJSON.history;
 
@@ -405,7 +405,7 @@ class NFLAPI {
     try {
       for(var s=2008;s<=2020;s++) {
         console.log(`starting season #${s}.`);
-        var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/jakes/${s}/0`);
+        var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/0`);
         var tempPlayersJSON = await tempPlayersResp.json();
         var tempPlayers = tempPlayersJSON.jakes;
         
@@ -418,7 +418,7 @@ class NFLAPI {
           var player = tempPlayers[tp];
           var ultimate = await this.calculateUltimate(player, player.birthday);
           if(ultimate) {
-            var pff_player_insert_r = await fetch(`http://lvh.me:3000/api/v1/update/pff/ultimate/`, {
+            var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/update/pff/ultimate/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -451,12 +451,12 @@ class NFLAPI {
   async fixMissingPlayers() {
     try {
       console.log('Fixing missing players...');
-      var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_list_ids/`);
+      var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_list_ids/`);
       var tempPlayersJSON = await tempPlayersResp.json();
       var tempPlayers = tempPlayersJSON.qbs;
       var records = 0;
 
-      var tempDetailsResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_details/`);
+      var tempDetailsResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_details/`);
       var tempDetailsJSON = await tempDetailsResp.json();
       var tempDetails = tempDetailsJSON.qbs;
 
@@ -481,7 +481,7 @@ class NFLAPI {
             hometown: ''
           }; 
 
-          var pff_player_insert_r = await fetch(`http://lvh.me:3000/api/v1/add/pff/player/`, {
+          var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/player/`, {
             method: 'post',              
             headers: {
               'Accept': 'application/json',
@@ -505,7 +505,7 @@ class NFLAPI {
 
   async minorFixes() {
     try {
-      var tempPlayersResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_list_ids/`);
+      var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_list_ids/`);
       var tempPlayersJSON = await tempPlayersResp.json();
       var tempPlayers = tempPlayersJSON.qbs;
 
@@ -524,7 +524,7 @@ class NFLAPI {
           hometown: ''
         };
 
-        var pff_player_insert_r = await fetch(`http://lvh.me:3000/api/v1/add/pff/player/`, {
+        var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/player/`, {
           method: 'post',              
           headers: {
             'Accept': 'application/json',
@@ -564,7 +564,7 @@ class NFLAPI {
               game_date: moment(game.start).format('YYYY-MM-DD')
             };
 
-            var pff_game_insert_r = await fetch(`http://lvh.me:3000/api/v1/update/pff/game/date`, {
+            var pff_game_insert_r = await fetch(`http://xperimental.io:4200/api/v1/update/pff/game/date`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -618,7 +618,7 @@ class NFLAPI {
               division: pff_team.groups[1].name.split(' ')[1]
             };
 
-            var pff_team_insert_r = await fetch(`http://lvh.me:3000/api/v1/add/pff/team/`, {
+            var pff_team_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/team/`, {
                 method: 'post',              
                 headers: {
                   'Accept': 'application/json',
@@ -668,7 +668,7 @@ class NFLAPI {
               loser_id: game.score.away_team > game.score.home_team ? game.home_franchise_id : game.away_franchise_id,
             };
 
-            var pff_game_insert_r = await fetch(`http://lvh.me:3000/api/v1/add/pff/game/`, {
+            var pff_game_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/game/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -746,7 +746,7 @@ class NFLAPI {
             };          
 
             week.ultimate_score = this.calculateUltimate(week, player.birthday);
-            var pff_week_insert_r = await fetch(`http://lvh.me:3000/api/v1/add/pff/week/`, {
+            var pff_week_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/week/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -768,7 +768,7 @@ class NFLAPI {
       console.log(`starting all players ${s}...`);
       for (var playerId in tempPlayers) {
         var player = tempPlayers[playerId];
-        var pff_player_insert_r = await fetch(`http://lvh.me:3000/api/v1/add/pff/player/`, {
+        var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/player/`, {
           method: 'post',              
           headers: {
             'Accept': 'application/json',
@@ -789,7 +789,7 @@ class NFLAPI {
 
   async fixNFLTeamHistory() {
     try { 
-      var fixResp = await fetch(`http://lvh.me:3000/api/v1/fix/nfl/teams/`);
+      var fixResp = await fetch(`http://xperimental.io:4200/api/v1/fix/nfl/teams/`);
       var fixJSON = await fixResp.json();
       console.log(fixJSON);
       if(fixJSON.success) {
@@ -807,13 +807,13 @@ class NFLAPI {
   async linkPFFToNFL() {
     try {
       for(var s=2019;s>=2009;s--) {
-        var listResp = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_list/${s}`);
+        var listResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_list/${s}`);
         var playerListJSON = await listResp.json();
         var season_qbs = playerListJSON.qbs;
 
         for(var sq=0;sq<season_qbs.length;sq++) {
           var pff_qb = season_qbs[sq];
-          var nfl_player_url = new URL(`http://lvh.me:3000/api/v1/get/nfl/player`)
+          var nfl_player_url = new URL(`http://xperimental.io:4200/api/v1/get/nfl/player`)
           var params = {season: s, player: pff_qb.player, position: 'QB', status: 'ACT'};
           nfl_player_url.search = new URLSearchParams(params).toString();
 
@@ -832,7 +832,7 @@ class NFLAPI {
               hometown: nfl_qb.homeTown
             };
 
-            var nfl_qb_resp = await fetch(`http://lvh.me:3000/api/v1/add/pff/player/`, {
+            var nfl_qb_resp = await fetch(`http://xperimental.io:4200/api/v1/add/pff/player/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -855,16 +855,16 @@ class NFLAPI {
 
   async updateCurrentWeek() {
     try {
-      var latestWeekResp = await fetch(`http://lvh.me:3000/api/v1/pff/get/currentweek/${this.season}`);
+      var latestWeekResp = await fetch(`http://xperimental.io:4200/api/v1/pff/get/currentweek/${this.season}`);
       var latestWeek = await latestWeekResp.json();
 
       // Then we have data and need to update instead of insert.
       if(latestWeek.week && parseInt(latestWeek.week) > 0) {
         debugger;
-        var l_games_resp = await fetch(`http://lvh.me:3000/api/v1/get/pff/games/${this.season}/${latestWeek.week}`);
+        var l_games_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/games/${this.season}/${latestWeek.week}`);
         var l_games = await l_games_resp.json();
 
-        var l_players_resp = await fetch(`http://lvh.me:3000/api/v1/get/pff/players/${this.season}/${latestWeek.week}`);
+        var l_players_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/players/${this.season}/${latestWeek.week}`);
         var l_players = await l_players_resp.json();
 
         var pff_players_response = await fetch(`https://www.pff.com/api/fantasy/stats/passing?&season=${this.season}&weeks=${latestWeek.week}`);      
@@ -883,7 +883,7 @@ class NFLAPI {
             var local_player = l_players[lp];
             if(local_player.player_id !== pff_player.player_id) continue;
 
-            var updated_resp = await fetch(`http://lvh.me:3000/api/v1/update/pff/week/`, {
+            var updated_resp = await fetch(`http://xperimental.io:4200/api/v1/update/pff/week/`, {
               method: 'post',              
               headers: {
                 'Accept': 'application/json',
@@ -907,7 +907,7 @@ class NFLAPI {
             pff_game['season'] = local_game.season;
             pff_game['week'] = local_game.week;
 
-            var updated_resp = await fetch(`http://lvh.me:3000/api/v1/update/pff/game/score`, {
+            var updated_resp = await fetch(`http://xperimental.io:4200/api/v1/update/pff/game/score`, {
               method: 'post',
               headers: {
                 'Accept': 'application/json',
@@ -959,7 +959,7 @@ class NFLAPI {
             playerStats['season'] = s;
             playerStats['jake_score'] = parseFloat((ints + fumbles) * jakeMulti);
             
-            let playerInsert = await fetch('http://lvh.me:3000/api/v1/add/pff/week', {
+            let playerInsert = await fetch('http://xperimental.io:4200/api/v1/add/pff/week', {
               method: 'post',
               headers: {
                 'Accept': 'application/json',
@@ -1032,7 +1032,7 @@ class NFLAPI {
               loser_id: loser_id
             };
 
-            let gameInsert = await fetch('http://lvh.me:3000/api/v1/add/pff/game', {
+            let gameInsert = await fetch('http://xperimental.io:4200/api/v1/add/pff/game', {
               method: 'post',
               headers: {
                 'Accept': 'application/json',
@@ -1055,7 +1055,7 @@ class NFLAPI {
 
   async fillNFLPlayersWithPFF() {
     var s = 2020;
-    var qbresponse = await fetch(`http://lvh.me:3000/api/v1/get/pff/player_list/${s}`);
+    var qbresponse = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_list/${s}`);
     var qbjson = await qbresponse.json();
     var qbs = qbjson.qbs;
 
@@ -1067,7 +1067,7 @@ class NFLAPI {
 
       console.log('qb data:', qb);
 
-      var plresponse = await fetch(`http://lvh.me:3000/api/v1/get/player/name/`,{
+      var plresponse = await fetch(`http://xperimental.io:4200/api/v1/get/player/name/`,{
         method: 'post',              
         headers: {
           'Accept': 'application/json',
@@ -1095,7 +1095,7 @@ class NFLAPI {
         weight: playerInfo ? playerInfo.weight : '',
       };  
    
-      var added_playerr = await fetch(`http://lvh.me:3000/api/v1/add/player`, {
+      var added_playerr = await fetch(`http://xperimental.io:4200/api/v1/add/player`, {
         method: 'post',              
         headers: {
           'Accept': 'application/json',
@@ -1111,7 +1111,7 @@ class NFLAPI {
 
       console.log('pff data:', update_pff_data);
 
-      var update_pff_idr = await fetch(`http://lvh.me:3000/api/v1/update/pff/player/`, {
+      var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/pff/player/`, {
         method: 'post',              
         headers: {
           'Accept': 'application/json',
@@ -1153,7 +1153,7 @@ class NFLAPI {
             season: s
           };
 
-          let teamInsert = await fetch('http://lvh.me:3000/api/v1/add/pff/team', {
+          let teamInsert = await fetch('http://xperimental.io:4200/api/v1/add/pff/team', {
             method: 'post',
             headers: {
               'Accept': 'application/json',
@@ -1176,7 +1176,7 @@ class NFLAPI {
 
   async fixGamesOld() {
     // Due to an oversight...I have to add in a bunch of game stats.    
-    let gamesReq = await fetch('http://lvh.me:3000/api/v1/get/games/all');
+    let gamesReq = await fetch('http://xperimental.io:4200/api/v1/get/games/all');
     let gjson = await gamesReq.json();
     let games = gjson.games;
 
@@ -1214,7 +1214,7 @@ class NFLAPI {
         id: game.id
       };
 
-      let gameUpdReq = await fetch('http://lvh.me:3000/api/v1/add/game/score', {
+      let gameUpdReq = await fetch('http://xperimental.io:4200/api/v1/add/game/score', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1371,7 +1371,7 @@ class NFLAPI {
 
       
 
-      let gameReq = await fetch('http://lvh.me:3000/api/v1/add/game/main', {
+      let gameReq = await fetch('http://xperimental.io:4200/api/v1/add/game/main', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1417,7 +1417,7 @@ class NFLAPI {
     };
     aggregateHomeData.teamId = gameData.gameSchedule.homeTeamId;
 
-    let aggReqHome = await fetch('http://lvh.me:3000/api/v1/add/game/aggregate', {
+    let aggReqHome = await fetch('http://xperimental.io:4200/api/v1/add/game/aggregate', {
       method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1435,7 +1435,7 @@ class NFLAPI {
     };
     aggregateVisitorData.teamId = gameData.gameSchedule.visitorTeamId;
 
-    let aggReqVisitor = await fetch('http://lvh.me:3000/api/v1/add/game/aggregate', {
+    let aggReqVisitor = await fetch('http://xperimental.io:4200/api/v1/add/game/aggregate', {
       method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1477,7 +1477,7 @@ class NFLAPI {
       homeDefensiveData.isHome = true;
       homeDefensiveData.teamId = gameData.gameSchedule.homeTeamId;
       homeDefensiveData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/defensive', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/defensive', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1504,7 +1504,7 @@ class NFLAPI {
       visitorDefensiveData.isVisitor = true;
       visitorDefensiveData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorDefensiveData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/defensive', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/defensive', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1545,7 +1545,7 @@ class NFLAPI {
       homeFumblesData.isHome = true;
       homeFumblesData.teamId = gameData.gameSchedule.homeTeamId;
       homeFumblesData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/fumbles', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/fumbles', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1572,7 +1572,7 @@ class NFLAPI {
       visitorFumblesData.isVisitor = true;
       visitorFumblesData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorFumblesData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/fumbles', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/fumbles', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1615,7 +1615,7 @@ class NFLAPI {
       homeKickingData.isHome = true;
       homeKickingData.teamId = gameData.gameSchedule.homeTeamId;
       homeKickingData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/kicking', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/kicking', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1642,7 +1642,7 @@ class NFLAPI {
       visitorKickingData.isVisitor = true;
       visitorKickingData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorKickingData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/kicking', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/kicking', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1683,7 +1683,7 @@ class NFLAPI {
       homePassingData.isHome = true;
       homePassingData.teamId = gameData.gameSchedule.homeTeamId;
       homePassingData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/passing', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/passing', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1710,7 +1710,7 @@ class NFLAPI {
       visitorPassingData.isVisitor = true;
       visitorPassingData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorPassingData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/passing', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/passing', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1753,7 +1753,7 @@ class NFLAPI {
       homePuntingData.isHome = true;
       homePuntingData.teamId = gameData.gameSchedule.homeTeamId;
       homePuntingData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/punting', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/punting', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1780,7 +1780,7 @@ class NFLAPI {
       visitorPuntingData.isVisitor = true;
       visitorPuntingData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorPuntingData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/punting', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/punting', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1823,7 +1823,7 @@ class NFLAPI {
       homeReceivingData.isHome = true;
       homeReceivingData.teamId = gameData.gameSchedule.homeTeamId;
       homeReceivingData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/receiving', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/receiving', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1850,7 +1850,7 @@ class NFLAPI {
       visitorReceivingData.isVisitor = true;
       visitorReceivingData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorReceivingData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/receiving', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/receiving', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1891,7 +1891,7 @@ class NFLAPI {
       homeReturnData.isHome = true;
       homeReturnData.teamId = gameData.gameSchedule.homeTeamId;
       homeReturnData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/return', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/return', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1918,7 +1918,7 @@ class NFLAPI {
       visitorReturnData.isVisitor = true;
       visitorReturnData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorReturnData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/return', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/return', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1961,7 +1961,7 @@ class NFLAPI {
       homeRushingData.isHome = true;
       homeRushingData.teamId = gameData.gameSchedule.homeTeamId;
       homeRushingData.playerId = hdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/rushing', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/rushing', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -1988,7 +1988,7 @@ class NFLAPI {
       visitorRushingData.isVisitor = true;
       visitorRushingData.teamId = gameData.gameSchedule.visitorTeamId;
       visitorRushingData.playerId = vdPlayer.nflId;
-      await fetch('http://lvh.me:3000/api/v1/add/game/rushing', {
+      await fetch('http://xperimental.io:4200/api/v1/add/game/rushing', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -2061,7 +2061,7 @@ class NFLAPI {
           playerData[playerKey] = player[playerKey];
         }
 
-        let insertReq = await fetch('http://lvh.me:3000/api/v1/add/player', {
+        let insertReq = await fetch('http://xperimental.io:4200/api/v1/add/player', {
           method: 'post',
           headers: {
             'Accept': 'application/json',
@@ -2109,7 +2109,7 @@ class NFLAPI {
 
       //return ret;
 
-      let req = await fetch('http://lvh.me:3000/api/v1/add/team', {
+      let req = await fetch('http://xperimental.io:4200/api/v1/add/team', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
