@@ -1,6 +1,6 @@
 {
   "name": "thejakeserver",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
     "axios": "^0.19.0",
@@ -14,10 +14,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.0.0",
-    "sass": "^1.17.4",
-    "sass-loader": "^7.1.0"
+    "eslint": "^5.16.0"
   },
   "eslintConfig": {
     "root": true,
@@ -31,14 +28,5 @@
     "parserOptions": {
       "parser": "babel-eslint"
     }
-  },
-  "postcss": {
-    "plugins": {
-      "autoprefixer": {}
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions"
-  ]
+  }
 }
