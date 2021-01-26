@@ -26,7 +26,7 @@ class NFLAPI {
       //  console.log('Result: ', result);
       //});
     //this.fixGames().then((fres) => {
-      //console.log('Result: ', fres);    
+      /*console.log('Result: ', fres);    
       this.setJakePositions().then((res) => {
         console.log('Result: ', res);    
         this.calculateHistoricalJakes().then((result) => {
@@ -36,7 +36,8 @@ class NFLAPI {
           });      
         });
       });
-    //});
+    //});*/
+    this.megaFill();
     
     // eslint-disable-next-line
     //console.log('Fixing Games...');
@@ -340,6 +341,7 @@ class NFLAPI {
 
     //console.log('history', history);
     //return;
+    if (!history) history = { jake_position_1: 0, jake_position_2: 0, jake_position_3: 0, jake_position_4: 0 };
 
     // History data that we care about is jake position totals. 
     // There is also a 'gameCount' field that we can use to get totals
@@ -595,7 +597,7 @@ class NFLAPI {
     // OK, found all the endpoints I need from PFF...    
     try {
       // Need to get things in this order: teams, games, players, player_stats, historical calcs
-      for(var s=2019;s<=2020;s++) {
+      for(var s=2020;s<=2020;s++) {
         console.log('starting season ' + s.toString() + '...');
         // Add team data, this works at the season level, so do it before week processing
         if(s === 2020) {
@@ -638,8 +640,7 @@ class NFLAPI {
         // This should be out here.
         var tempPlayers = {};
         // At the week level we will do games and stats
-        for(var w=1;w<=21;w++) {   
-          if(s === 2019 && w < 11) continue;
+        for(var w=3;w<=3;w++) {   
           console.log(`starting week ${w} - ${s}...`);     
           var gamesDataResp = await fetch(`https://premium.pff.com/api/v1/games?season=${s}&week=${w}&league=nfl`);
           var statsDataResp = await fetch(`https://www.pff.com/api/fantasy/stats/passing?&season=${s}&weeks=${w}`);

@@ -23,7 +23,7 @@ const upload  = multer({
   storage: multers3({
     s3: s3,
     acl: 'public-read',
-    bucket: 'devtrackeroverlord',
+    bucket: 'thejake.xperimental.io',
     key: function (req, file, cb) {
       //console.log(file);
       var newFileName = Date.now() + "-" + file.originalname;
