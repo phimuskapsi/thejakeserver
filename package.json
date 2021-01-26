@@ -10,7 +10,7 @@
     "idb": "^4.0.5",
     "mariadb": "^2.1.2",
     "moment": "^2.24.0",
-    "node-fetch": "^2.6.0",  
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
