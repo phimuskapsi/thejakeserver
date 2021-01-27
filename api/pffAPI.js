@@ -251,7 +251,8 @@ async function getESPNPassingDataForGame(gameId, season, week) {
   }
 
   if(gameStats) {
-    gameStats.boxscore.players.forEach(player => {
+    for(var p=0;p<gameStats.boxscore.players.length;p++){
+      var player = gameStats.boxscore.players[p];
       // Passing should always be in the 0th index.
       var teamFumblingAthletes = player.statistics[player.statistics.findIndex(statItem => statItem.name === 'fumbles')].athletes;
       var teamPassingAthletes = player.statistics[player.statistics.findIndex(statItem => statItem.name === 'passing')].athletes;
@@ -320,13 +321,13 @@ async function getESPNPassingDataForGame(gameId, season, week) {
         
         } 
       };        
-    });
+    };
   }
 
   return gamePlayers;
 }
 
-function getCurrentWeek(calendar) {
+async function getCurrentWeek(calendar) {
   var currentDate = moment();
   var seasonStart = moment(calendar.startDate);
   var seasonEnd = moment(calendar.endDate);
@@ -402,7 +403,7 @@ async function updateCurrentWeek(season, week = 0) {
     // Get the ESPN Scoreboard, which actually has all of the data we need...
     var espn_current_stats_r = await fetch(`http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`);      
     var espn_current_stats = await espn_current_stats_r.json();
-    var currentWeekData = getCurrentWeek(espn_current_stats.leagues[0].calendar[seasonType]);
+    var currentWeekData = await getCurrentWeek(espn_current_stats.leagues[0].calendar[seasonType]);
     var currentWeek = currentWeekData.currentWeek;
     var update = currentWeekData.forceUpdate;
     var espn_parsed_games = null;
