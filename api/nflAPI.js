@@ -746,7 +746,7 @@ class NFLAPI {
               ultimate_score: 0.00
             };          
 
-            week.ultimate_score = this.calculateUltimate(week, player.birthday);
+            week.ultimate_score = await this.calculateUltimate(week, player.birthday);
             var pff_week_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/week/`, {
               method: 'post',              
               headers: {
