@@ -259,7 +259,7 @@ async function getESPNPassingDataForGame(gameId, season, week) {
       var playerTeamInfo = player.team;
 
       // Get passing only stats for now, we'll do fumbles later
-      teamPassingAthletes.forEach(athlete => {
+      teamPassingAthletes.forEach(async athlete => {
         var qb = athlete.athlete;
         var qbStats = athlete.stats;
         var qbCompAtt = qbStats[0].split('/');
