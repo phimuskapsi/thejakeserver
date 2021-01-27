@@ -6,6 +6,7 @@ const pool    = mariadb.createPool(require('../config.json'));
 const fetch = require("node-fetch");
 const { weekdaysMin } = require('moment');
 const { query } = require('express');
+const { of } = require('core-js/fn/array');
 var error   = { message: 'Error!', code: 0 };
 
 Object.prototype.clone = Array.prototype.clone = function()
@@ -30,160 +31,6 @@ Object.prototype.clone = Array.prototype.clone = function()
     else
         return this;
 }
-
-async function calculateHistoricalJakes(season = 2020) {
-  try {
-    var records = 0;
-    var players = {};
-    var s = season;
-    
-    console.log('starting season: ' + s.toString());
-      
-    var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/0`);
-    var tempPlayersJSON = await tempPlayersResp.json();
-    var tempPlayers = tempPlayersJSON.jakes;
-    
-    for(var t=0;t<tempPlayers.length;t++) {
-      var player = tempPlayers[t];
-      var historical_record = {
-        pff_id: 0,
-        jake_position_1: 0,
-        jake_position_2: 0,
-        jake_position_3: 0,
-        jake_position_4: 0,
-        record_jake: 0.00
-      };
-
-      if(!players[player.player_id]) {
-        historical_record.pff_id = player.player_id;
-        players[player.player_id] = historical_record;
-      }
-
-      if(player.jake_score > players[player.player_id].record_jake) players[player.player_id].record_jake = player.jake_score;        
-      switch(player.jake_position) {
-        case 1: 
-          players[player.player_id].jake_position_1++;
-        break;
-
-        case 2:
-          players[player.player_id].jake_position_2++;
-        break;
-
-        case 3:
-          players[player.player_id].jake_position_3++;
-        break;
-
-        case 4:
-        default:
-          players[player.player_id].jake_position_4++;
-        break;
-      }
-    }
-    
-    for(var player_id in players) {
-      var historicalPlayer = players[player_id];
-      var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/jake_history/`, {
-        method: 'post',              
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(historicalPlayer)
-      });
-
-      var update_pff_idj = await update_pff_idr.json();           
-      console.log(`historical player: ${player_id} OK: ${update_pff_idj.success}`);
-    } 
-  } catch (err) {
-    console.log('error:', err);
-    return err;
-  }
-}
-
-async function calculateUltimate(player_stats, birthdate) {
-  var comp_per = player_stats.comp_per;
-  var yards = player_stats.yds;
-  var att = player_stats.att;
-  var comp = player_stats.comp;
-  var td = player_stats.tds;
-  var int = player_stats.ints;
-  var sacks = player_stats.sacks;
-  var fumbles = player_stats.fumbles;
-  var qbr = player_stats.qbr;
-  var jake = parseFloat(((parseInt(player_stats.ints) + parseInt(player_stats.fumbles)) * 1/6) * 100);
-  var perfect = 1075;
-  var birthday_score = 10000;
-  var ultimate = 0;
-  //var history = {};
-
-  // Idea is that a perfect jake is 1075 + 10000 = 11075 (jan 10, 1975 - delhomme's bday!)
-  // Gotta get some historical shit. 
-  var histResp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/player_history/${player_stats.player_id}`);
-  var histRespJSON = await histResp.json();
-  var history = histRespJSON.history;
-
-  //console.log('history', history);
-  //return;
-
-  // History data that we care about is jake position totals. 
-  // There is also a 'gameCount' field that we can use to get totals
-  // History should account for 20% of the score
-  // Jakes total is slightly weighted. Heavy weight on first.
-  var jp1 = history.jake_position_1 ? history.jake_position_1 : 0;
-  var jp2 = history.jake_position_3 ? history.jake_position_2 : 0;
-  var jp3 = history.jake_position_3 ? history.jake_position_3 : 0;
-  var jp4 = history.jake_position_4 ? history.jake_position_4 : 0;
-
-  var raw_jakes_total = jp1 + jp2 + jp3 + jp4;
-  var jakes_total = ( 
-    (jp1 * 0.65) + 
-    (jp2 * 0.20) + 
-    (jp3 * 0.10) + 
-    (jp4 * 0.05)
-  );
-
-  var game_total = history.gameCount;
-  var history_score = (jakes_total * (1 + (raw_jakes_total/game_total)))*10;
-  if(history_score > 200) history_score = 200.00;
-
-  // Jake score makes up the majority.
-  ultimate += jake * 5; // up to 500 (or more theoretically)
-    
-  // Sacks add 100 more. If 10 or more, 100
-  if(!sacks) sacks = 0;
-  ultimate += (sacks > 10 ? 100 : sacks * 10);
-
-  // In this case, this will flip qbr upside down.
-  // A 0.00 qbr (1.00) = 158.3 points, and a 158.3 qbr = 1 point;
-  // It multiplies the result to get a value max of 300;
-  if(!qbr) qbr = 0;
-  if(qbr === 0) qbr = 1;
-  var qbr_score = (((1/qbr)*158.3)*1.895);
-  if(qbr_score > 300) qbr_score = 300.00
-  ultimate += qbr_score    
-  
-  // TD's work like sacks in reverse, 0 td's = no subtraction, perfect is achievable.
-  ultimate -= (td > 10 ? 100 : td * 10);
-
-  // 1000 only gets us soooo far.
-  ultimate += 75;
-
-  var game_day = moment(player_stats.game_date).format('MM-DD');
-  var bday = moment(player_stats.birthday, 'YYYY-MM-DD').format('MM-DD');
-
-  // Only add the bday penalty if the jake score is greater than 0
-  if(bday === game_day && jake > 0.00) {
-    ultimate += birthday_score;
-  }
-
-  if(ultimate > (perfect + birthday_score)) {
-    ultimate = perfect + birthday_score;
-  }
-  
-  // If jake is zero, then they are not eligible for the rating.
-  if(jake === 0.00) ultimate = 0.00;
-  return ultimate.toFixed(3);  
-};
 
 async function calculateESPNUltimate(player_stats, player, season, player_id) {
   var td = player.td;
@@ -269,96 +116,6 @@ async function calculateESPNUltimate(player_stats, player, season, player_id) {
   if(jake === 0.00) ultimate = 0.00;
   return ultimate.toFixed(3);   
 };
-
-async function calcUlts() {
-  try {
-    for(var s=2008;s<=2020;s++) {
-      console.log(`starting season #${s}.`);
-      var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/0`);
-      var tempPlayersJSON = await tempPlayersResp.json();
-      var tempPlayers = tempPlayersJSON.jakes;
-      
-      var records = 0;
-
-      //console.log('tp:', tempPlayers);
-      //return;
-
-      for(var tp=0;tp<tempPlayers.length;tp++) {
-        var player = tempPlayers[tp];
-        var ultimate = await calculateUltimate(player, player.birthday);
-        if(ultimate) {
-          var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/update/pff/ultimate/`, {
-            method: 'post',              
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({id: player.id, ultimate: ultimate})
-          });
-          var pff_player_insert = await pff_player_insert_r.json();
-          if(pff_player_insert) {
-            //console.log('added: ', player.id);
-          }
-        } else {
-          console.log('ultimate', ultimate);
-          throw 'failed to get ultimate score';
-        }
-
-        var pi = tp + 1;
-        records++;
-        console.log(`player #${pi} calculated: ${ultimate}`)
-      }
-    }
-
-    return 'ulimates complete. #records processed: ' + records.toString();
-  } catch (err) {
-    console.log('error:', err);
-    return err;
-  }
-};
-
-async function checkAndAddPlayer(season = 0, week = 0, search_name = '') {
-  try {
-    var pff_players_resp = await fetch(`https://www.pff.com/api/fantasy/stats/passing?&season=${season}&weeks=${week}`);
-    var pff_players = await pff_players_resp.json();
-    var player_id = 0;  
-    var pffindex = pff_players.findIndex((player) => {
-      return player.player === search_name
-    });
-
-    // PFF finally updated their shit, so let's set it now.
-    if(pffindex > 0) {
-      player_id = pff_players[pffindex].player_id;
-    } else {
-      return false;
-    }  
-    
-    var player = await queryDB(`SELECT * FROM nfl.pff_players p WHERE p.pff_id = ${player_id}`, []);
-    if(!player || player.length === 0) {
-      var playerInfoResp = await fetch(`https://premium.pff.com/api/v1/players?league=nfl&id=${player_id}`);
-      var playerInfoJSON = await playerInfoResp.json();
-      var playerInfo = playerInfoJSON.players[0];
-
-      var tplayer = {
-        pff_id: playerInfo.id,
-        first_name: playerInfo.first_name,
-        last_name: playerInfo.last_name,
-        full_name: playerInfo.first_name + ' ' + playerInfo.last_name,
-        birthday: playerInfo.dob,
-        hometown: ''
-      }; 
-
-      var insertPFFData = getKeysAndValues(tplayer);
-      let insertPFFQuery = `INSERT INTO nfl.pff_players
-                              (${insertPFFData.keysSQL}) 
-                            VALUES (${insertPFFData.valsSQL});`;
-      var inserted = await queryDB(insertPFFQuery, insertPFFData.params);    
-      return true;                          
-    }
-  } catch(err) {
-    return false;
-  }
-}
 
 function getKeysAndValuesForUpdate(obj){
   //console.log(obj);
@@ -479,92 +236,6 @@ async function parseESPNGamesFromSchedule(espnData, season, week) {
   return parsedGames;
 }
 
-async function parseYahooPassers(yahooData, season, week) {
-  var players = yahooData.data.leagues[0].leagueWeeks[0].leaders;
-  var parsedPlayers = [];
-
-  for(var p=0;p<players.length;p++) {
-    var player = players[p].player;
-    var player_stats_pre = players[p].stats;
-    var player_stats = {};
-
-    player_stats_pre.forEach((stat) => {
-      player_stats[stat.statId] = stat.value;
-    });
-
-    if(player.team.abbreviation === 'WSH') player.team.abbreviation = 'WAS';
-    if(player.team.abbreviation === 'LAR') player.team.abbreviation = 'LA';
-    if(player.team.abbreviation === 'CLE') player.team.abbreviation = 'CLV';
-    if(player.team.abbreviation === 'BAL') player.team.abbreviation = 'BLT';
-    if(player.team.abbreviation === 'HOU') player.team.abbreviation = 'HST';
-    if(player.team.abbreviation === 'ARI') player.team.abbreviation = 'ARZ';
-
-    var teamId = 0;
-    if(season >= 2020) {
-      var teamIdR = await fetch(`http://xperimental.io:4200/api/v1/get/pff/team/${player.team.abbreviation}/${season}`);
-      var teamIdJ = await teamIdR.json();
-      teamId = teamIdJ.team[0].franchise_id;
-    }
-
-    // Check the Db for player info, based on season and week. 
-    var search_name = player.displayName.split(' ')[0] + ' ' + player.displayName.split(' ')[1];
-    var player_name_resp = await fetch(`http://xperimental.io:4200/api/v1/get/player/name/`, {
-      method: 'post',              
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name: search_name  })
-    });
-
-    var player_name_json = await player_name_resp.json();
-    var player_id = 0;
-    
-    if(!player_name_json || !player_name_json.player || !player_name_json.player.pff_id) {
-      // Can't find the player in the players db. 
-      var player_exists = checkAndAddPlayer(season, week, search_name);
-      if (!player_exists) {
-        console.log(`Tried to update and add: ${search_name}, and failed. PFF data may not exist.`);
-      }
-    } else {
-      player_id = player_name_json.player.pff_id;
-    }
-
-    // We only want to add a parsed player to be updated/added if the player actually exists in our tables...
-    if(player_id > 0) {
-      
-      var parsedPlayer = {
-        id: 0,
-        ints: player_stats.PASSING_INTERCEPTIONS,
-        fumbles: player_stats.FUMBLES_LOST,
-        att: player_stats.PASSING_ATTEMPTS,
-        comp: player_stats.PASSING_COMPLETIONS,
-        player: search_name,
-        player_id: player_id,
-        rush_carries: 0,
-        rush_tds: 0,
-        rush_yds: 0,
-        tds: player_stats.PASSING_TOUCHDOWNS,
-        sacks: player_stats.SACKS_TAKEN,
-        team: player.team.abbreviation,
-        team_id: teamId,
-        season: season,
-        week: week,
-        qbr: player_stats.QB_RATING,
-        ypa: player_stats.PASSING_YARDS_PER_ATTEMPT,
-        comp_per: player_stats.COMPLETION_PERCENTAGE,
-        yds: player_stats.PASSING_YARDS,
-        jake_score: (parseInt(player_stats.PASSING_INTERCEPTIONS) + parseInt(player_stats.FUMBLES_LOST)) * 1/6,
-        ultimate_score: await calculateYahooUltimate(player_stats, player.displayName, season, player_id)
-      };
-
-      parsedPlayers.push(parsedPlayer);
-    }
-  }
-
-  return parsedPlayers;
-}
-
 async function getESPNPassingDataForGame(gameId, season, week) {
   // Time to update stats for players, up here now.
   // https://secure.espn.com/core/nfl/boxscore?gameId=401131037&xhr=1&render=false
@@ -655,277 +326,59 @@ async function getESPNPassingDataForGame(gameId, season, week) {
   return gamePlayers;
 }
 
-
-async function setJakePositions(season = 2020, weeks = 21) {
-  try {
-    var s = season;
-    console.log('starting season: ' + s.toString());
-    for(var w=1;w<=weeks;w++) {
-      console.log('starting week: ' + w.toString());
-
-      var tempPlayersResp = await fetch(`http://xperimental.io:4200/api/v1/get/jakes/${s}/${w}`);
-      var tempPlayersJSON = await tempPlayersResp.json();
-      var tempPlayers = tempPlayersJSON.jakes;
-      var records = 0;
-
-      // Players will be all sorted by jake order
-      // It will also sort by ultimate for ties
-      // By week
-      var pos = 0;
-      var last_score = 0.00;
-      for(var tp=0;tp<tempPlayers.length;tp++) {
-        var player = tempPlayers[tp];
-
-        if(last_score !== player.jake_score) {
-          last_score = player.jake_score
-          pos++;
-        }
-
-        var update_pff_data = {
-          id: player.id,
-          jake_position: pos
-        };
-
-        var update_pff_idr = await fetch(`http://xperimental.io:4200/api/v1/update/pff/jake_pos/`, {
-          method: 'post',              
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(update_pff_data)
-        });
-
-        var update_pff_idj = await update_pff_idr.json();
-        //console.log('pff resp:', update_pff_idj);
-        records++;
-        if(!update_pff_idj.success) {
-          console.log('failed, last data:', update_pff_data);
-        }
-      }
-      
-    }    
-
-    return 'jakes positioned and complete. #records processed: ' + records.toString();
-  } catch (err) {
-    console.log('error:', err);
-    return err;
-  }
-}
-
-async function getPFFData(season, week) {
-  // function to get PFF data in certain circumstances (non-live data)
-  try {
-    // Need to get things in this order: teams, games, players, player_stats, historical calcs
-    console.log('starting season ' + season.toString() + ', week: ' + week);
-    // Add team data, this works at the season level, so do it before week processing
-    var teamsDataResp = await fetch(`https://premium.pff.com/api/v1/teams?season=${season}&league=nfl`);
-    var teamsDataJSON = await teamsDataResp.json();
-    var teamsData = teamsDataJSON.teams;
-    console.log('starting teams...');
-
-    for(var t=0;t<teamsData.length;t++) {
-      var pff_team = teamsData[t];
-      var team = {
-        abbreviation: pff_team.abbreviation,
-        city: pff_team.city,
-        nickname: pff_team.nickname,
-        franchise_id: pff_team.franchise_id,
-        primary_color: pff_team.primary_color,
-        secondary_color: pff_team.secondary_color,
-        season: s,
-        color_metadata: pff_team.color_metadata,
-        conference: pff_team.groups[0].name,
-        division: pff_team.groups[1].name.split(' ')[1]
-      };
-
-      var pff_team_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/team/`, {
-        method: 'post',              
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(team)
-      });
-      var pff_team_insert = await pff_team_insert_r.json();
-      if(pff_team_insert) {
-        console.log('added ' + team.nickname + ' for ' + s.toString());
-      }
-    }    
-
-    console.log('teams done for season...'); 
-    
-    // This should be out here.
-    var tempPlayers = {};
-    // At the week level we will do games and stats
-    var gamesDataResp = await fetch(`https://premium.pff.com/api/v1/games?season=${season}&week=${week}&league=nfl`);
-    var statsDataResp = await fetch(`https://www.pff.com/api/fantasy/stats/passing?&season=${season}&weeks=${week}`);
-    var advDataResp = await fetch(`https://premium.pff.com/api/v1/facet/passing/summary?league=nfl&season=${season}&week=${week}`);
-    
-    var gamesDataJSON = await gamesDataResp.json();
-    var statsData = await statsDataResp.json();
-    var advDataJSON = await advDataResp.json();
-    var advData = advDataJSON.passing_stats;
-    var gamesData = gamesDataJSON.games;
-
-    console.log(`starting games for ${w} - ${s}...`);
-    for(var g=0;g<gamesData.length;g++) {
-      var game = gamesData[g];
-      var game = {
-        score_away: game.score.away_team,
-        score_home: game.score.home_team,
-        season: s,
-        week: w,
-        stadium_id: game.stadium_id,
-        pff_id: game.id,
-        away_team_id: game.away_franchise_id,
-        home_team_id: game.home_franchise_id,
-        winner: game.score.away_team > game.score.home_team ? 'away' : 'home',
-        winner_id: game.score.away_team > game.score.home_team ? game.away_franchise_id : game.home_franchise_id,
-        loser_id: game.score.away_team > game.score.home_team ? game.home_franchise_id : game.away_franchise_id,
-      };
-
-      var pff_game_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/game/`, {
-        method: 'post',              
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(game)
-      });
-      var pff_game_insert = await pff_game_insert_r.json();
-      if(pff_game_insert) {
-        var gn = g+1;
-        console.log(`added game # ${gn} for ${w} - ${s}...`);
-      }
-    }
-
-    console.log(`completed games for ${w} - ${s}...`);      
-    console.log(`starting stats for ${w} - ${s}...`);
-    for(var p=0;p<statsData.length;p++) {
-      var stat_line = statsData[p];
-      var player = false;
-
-      // Setup some basic caching for players, since we don't want to fetch duplicates
-      if(tempPlayers[stat_line.player_id]) {
-        player = tempPlayers[stat_line.player_id];
-      } else {
-        var playerInfoResp = await fetch(`https://premium.pff.com/api/v1/players?league=nfl&id=${stat_line.player_id}`);
-        var playerInfoJSON = await playerInfoResp.json();
-        var playerInfo = playerInfoJSON.players[0];
-        player = {
-          pff_id: stat_line.player_id,
-          first_name: playerInfo.first_name,
-          last_name: playerInfo.last_name,
-          full_name: stat_line.player,
-          birthday: playerInfo.dob,
-          hometown: ''
-        };
-
-        tempPlayers[stat_line.player_id] = player;
-      }
-
-      var advPlayerIndex = advData.findIndex((v, i) => {
-        return v.player_id === stat_line.player_id;
-      });
-
-      if(advPlayerIndex === -1) {
-        console.log('bad stat line for player: ', stat_line.player);
-        continue;
-      }
-
-      var advPlayer = advData[advPlayerIndex];
-      var week = {
-        player: stat_line.player,
-        player_id: stat_line.player_id,
-        att: stat_line.att,
-        comp: stat_line.comp,
-        dropbacks: stat_line.dropbacks,
-        fumbles: stat_line.fumbles,
-        games: stat_line.games,
-        ints: stat_line.ints,
-        qbr: parseFloat(advPlayer.qb_rating),
-        ypa: advPlayer.ypa,
-        comp_per: parseFloat(advPlayer.completion_percent),
-        rush_carries:stat_line.rush_carries,
-        rush_tds: stat_line.rush_tds,
-        rush_yds: stat_line.rush_yds,
-        tds: stat_line.tds,
-        team: stat_line.team,
-        team_id: stat_line.team_id,
-        yds: stat_line.yds,
-        jake_score: (parseInt(stat_line.ints) + parseInt(stat_line.fumbles)) * (1/6),
-        season: s,
-        week: w,
-        sacks: stat_line.sks,
-        ultimate_score: 0.00
-      };          
-
-      week.ultimate_score = this.calculateUltimate(week, player.birthday);
-      var pff_week_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/week/`, {
-        method: 'post',              
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(week)
-      });
-      var pff_week_insert = await pff_week_insert_r.json();      
-    } // End Stat Loop
-
-      
-
-    console.log(`completed majority of data addition!`);
-    // Insert players after all other data is process
-    console.log(`starting all players ${s}...`);
-    for (var playerId in tempPlayers) {
-      var player = tempPlayers[playerId];
-      var pff_player_insert_r = await fetch(`http://xperimental.io:4200/api/v1/add/pff/player/`, {
-        method: 'post',              
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(player)
-      });
-      var pff_player_insert = await pff_player_insert_r.json();
-    }
-
-    console.log('Finished adding all data successfully!');
-  } catch (err) {
-    //eslint-disable-next-line
-    console.log('error:', err);
-    return err;
-  }      
-}
-
 function getCurrentWeek(calendar) {
   var currentDate = moment();
   var seasonStart = moment(calendar.startDate);
   var seasonEnd = moment(calendar.endDate);
   var currentWeek = 0;
 
+  // Then we have data and need to update instead of insert.
+  var l_games_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/games/${season}/${week}`);
+  var l_games_json = await l_games_resp.json();
+  var l_games = l_games_json.games;
+  var oldest_last_updated = null;
+  var most_recent_last_updated = null;
+  var force_update = false;
+  
+  // Get the last last_update
+  l_games.forEach(game => {
+    var glu = moment(game.last_updated);
+    if(!most_recent_last_updated) most_recent_last_updated = glu;
+    if(!oldest_last_updated) oldest_last_updated = glu;
+    
+    if(glu > most_recent_last_updated) most_recent_last_updated = glu;
+    if(glu < oldest_last_updated) oldest_last_updated = glu;
+  });
+
   if(currentDate > seasonEnd) {
     // We're in the post season, so the last week will always be the SB
     // SB = Week 22, 17 weeks for reg, 5 for post
     currentWeek = 22;
+    if (most_recent_last_updated < seasonEnd) force_update = true;
   }
 
   if(currentDate < seasonStart) { 
     currentWeek = 1;
+    if (most_recent_last_updated < seasonStart) force_update = false;
   }
 
   if(calendar.entries) {
     for(var e=0;e<calendar.entries.length;e++) {
       var entry = calendar.entries[e];
+
+      if(most_recent_last_updated < entry.endDate) force_update = true;
+      if(oldest_last_updated < entry.endDate) force_update = true;
+
       // Check if we are within the bounds of the possible weeks, if we find one, then we are returning the value (which is the week #)
       if(currentDate >= moment(entry.startDate) && currentDate <= moment(entry.endDate)) {
         currentWeek = parseInt(entry.value);
+        force_update = true;
         break;
       }
     }
   }
 
-  return currentWeek;
+  return { currentWeek: currentWeek, forceUpdate: force_update };
 }
 
 async function updateCurrentWeek(season, week = 0) {
@@ -944,56 +397,40 @@ async function updateCurrentWeek(season, week = 0) {
     if(week > 17) {
       seasonType = 2;
       adjustedWeek = week - 17;
-    }
+    }  
 
     // Get the ESPN Scoreboard, which actually has all of the data we need...
     var espn_current_stats_r = await fetch(`http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`);      
     var espn_current_stats = await espn_current_stats_r.json();
-    var currentWeek = getCurrentWeek(espn_current_stats.leagues[0].calendar[seasonType]);
+    var currentWeekData = getCurrentWeek(espn_current_stats.leagues[0].calendar[seasonType]);
+    var currentWeek = currentWeekData.currentWeek;
+    var update = currentWeekData.forceUpdate;
     var espn_parsed_games = null;
 
     if (week !== currentWeek) {
-      // Then we are likely browsing history...
-      // So we need to get the schedule for the selected week, not the current one
-      var espnSchedule = await fetch(`https://secure.espn.com/core/nfl/schedule?year=${season}&week=${adjustedWeek}&seasontype=${seasonType+1}&xhr=1&render=false`);      
-      var espnScheduleData = await espnSchedule.json();
+      if(update) {
+        // Then we are likely browsing history...
+        // So we need to get the schedule for the selected week, not the current one
+        var espnSchedule = await fetch(`https://secure.espn.com/core/nfl/schedule?year=${season}&week=${adjustedWeek}&seasontype=${seasonType+1}&xhr=1&render=false`);      
+        var espnScheduleData = await espnSchedule.json();
 
-      // This is slightly different in structure and needs some looping, so a new function was created.
-      espn_parsed_games = await parseESPNGamesFromSchedule(espnScheduleData, season, week);
+        // This is slightly different in structure and needs some looping, so a new function was created.
+        espn_parsed_games = await parseESPNGamesFromSchedule(espnScheduleData, season, week);
+      } else {
+        return {success: true, msg: 'update not necessary for this season + week'};
+      }
     } else {
       // Fetch Current Week Stats from ESPN // Note! This is only THIS week, and you cannot set the week.
       espn_parsed_games = await parseESPNGames(espn_current_stats.events, season, week);
     }
 
-    var l_games_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/games/${season}/${week}`);
-    var l_games_json = await l_games_resp.json();
-    var l_games = l_games_json.games;
-
     // Then update games
     for(var eg=0;eg<espn_parsed_games.length;eg++) {
       var local_game = false;
       var espn_game = espn_parsed_games[eg];
-      //console.log('eg:', espn_game);
-      var lgindex = l_games.findIndex((game) => {
-        return game.away_team_id === espn_game.away_team_id && game.home_team_id === espn_game.home_team_id
-      });
-      
-      //console.log('lgi:', lgindex);
 
-      if(lgindex >= 0) {
-        local_game = l_games[lgindex];
-      }
-    
-      //console.log('local game:', local_game);
-      var insertGame = espn_game;
-      var url = '';
-      if(local_game) {
-        insertGame.id = local_game.id;
-        url = `http://xperimental.io:4200/api/v1/update/pff/game/score`;
-      } else {
-        url = `http://xperimental.io:4200/api/v1/add/pff/game`;
-      }
-      
+      // We just need to use this url now, as there is a key check that will auto-update if it exists
+      var url = `http://xperimental.io:4200/api/v1/add/pff/game`;
       var updated_game_resp = await fetch(url, {
         method: 'post',              
         headers: {
@@ -1006,14 +443,8 @@ async function updateCurrentWeek(season, week = 0) {
       var updatedGame = await updated_game_resp.json();            
     } 
 
-    var espn_passers = await getESPNPassingDataForGame(espn_game.espn_game_id, season, week);
     // espn_passers should now be the equivalent of the yahoo passers data we generated before.
-
-    // Then we have data and need to update instead of insert.
-    var l_games_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/games/${season}/${week}`);
-    var l_games_json = await l_games_resp.json();
-    var l_games = l_games_json.games;
-
+    var espn_passers = await getESPNPassingDataForGame(espn_game.espn_game_id, season, week);    
     var l_players_resp = await fetch(`http://xperimental.io:4200/api/v1/get/pff/players/${season}/${week}`);
     var l_players_json = await l_players_resp.json();      
     var l_players = l_players_json.qbs;
@@ -1134,7 +565,8 @@ router.post('/add/pff/game', async (req, res) => {
     var insertPFFData = getKeysAndValues(weekData);
     let insertPFFQuery = `INSERT INTO nfl.pff_games
                             (${insertPFFData.keysSQL}) 
-                          VALUES (${insertPFFData.valsSQL});`;
+                          VALUES (${insertPFFData.valsSQL})
+                          ON DUPLICATE KEY UPDATE score_away = ${weekData.score_away}, score_home = ${weekData.score_home};`;
 
     await queryDB(insertPFFQuery, insertPFFData.params);  
     res.json({done: true, success: true });
@@ -1177,7 +609,7 @@ router.get('/get/pff/games/:season/:week', async (req, res) => {
   try {
     var gamesQ = `SELECT g.*,
                     (SELECT t.abbreviation FROM nfl.pff_teams t WHERE t.franchise_id = g.away_team_id and t.season = g.season) as away_team,
-                    (SELECT t.abbreviation FROM nfl.pff_teams t WHERE t.franchise_id = g.home_team_id and t.season = g.season) as home_team
+                    (SELECT t.abbreviation FROM nfl.pff_teams t WHERE t.franchise_id = g.home_team_id and t.season = g.season) as home_team,                    
                   FROM nfl.pff_games g
                   WHERE g.season = ${req.params.season} AND g.week = ${req.params.week}`;
     var games = await queryDB(gamesQ, []);
