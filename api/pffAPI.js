@@ -259,9 +259,9 @@ async function getESPNPassingDataForGame(gameId, season, week) {
       var playerTeamInfo = player.team;
 
       // Get passing only stats for now, we'll do fumbles later
-      teamPassingAthletes.forEach(async athlete => {
-        var qb = athlete.athlete;
-        var qbStats = athlete.stats;
+      for(var a=0;a<teamPassingAthletes.length;a++) {
+        var qb = teamPassingAthletes[a].athlete;
+        var qbStats = teamPassingAthletes[a].athlete.stats;
         var qbCompAtt = qbStats[0].split('/');
         var qbID = qb.id;
         var qbFumbles = { fum: 0, lost: 0, rec: 0 };
@@ -319,7 +319,7 @@ async function getESPNPassingDataForGame(gameId, season, week) {
           gamePlayers.push(player);
         
         } 
-      });        
+      };        
     });
   }
 
