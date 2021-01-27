@@ -640,7 +640,7 @@ class NFLAPI {
         // This should be out here.
         var tempPlayers = {};
         // At the week level we will do games and stats
-        for(var w=3;w<=3;w++) {   
+        for(var w=9;w<=21;w++) {   
           console.log(`starting week ${w} - ${s}...`);     
           var gamesDataResp = await fetch(`https://premium.pff.com/api/v1/games?season=${s}&week=${w}&league=nfl`);
           var statsDataResp = await fetch(`https://www.pff.com/api/fantasy/stats/passing?&season=${s}&weeks=${w}`);
