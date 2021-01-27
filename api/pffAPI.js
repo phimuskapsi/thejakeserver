@@ -779,6 +779,7 @@ router.get('/get/jakes/:season/:week', async (req, res) => {
                     JOIN nfl.pff_teams t ON p.team = t.abbreviation and p.season = t.season
                     JOIN nfl.pff_players pl ON pl.pff_id = p.player_id
                   WHERE ${seasonQuery} ${weekQuery} AND p.jake_score > 0
+                  GROUP BY p.id
                   ORDER BY ${orderByAdd} `;
                   //console.log('reqp', jakesQ);
 
