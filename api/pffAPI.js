@@ -819,6 +819,7 @@ router.get('/get/player_stats/:season/:week', async (req, res) => {
                     JOIN nfl.pff_teams t ON p.team = t.abbreviation and p.season = t.season
                     JOIN nfl.pff_players pl ON pl.pff_id = p.player_id
                   WHERE ${seasonQuery} ${weekQuery}
+                  GROUP BY p.id
                   ORDER BY ${orderByAdd} `;
                  // console.log('reqp', playersQ);
 
